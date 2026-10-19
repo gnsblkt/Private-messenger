@@ -1,0 +1,11 @@
+{
+  "name": "private-messenger-signaling",
+  "version": "1.0.0",
+  "main": "server/signalingServer.js",
+  "scripts": {
+    "start": "node server/signalingServer.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
