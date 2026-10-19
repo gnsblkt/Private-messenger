@@ -1,0 +1,289 @@
+```html
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Private Messenger — Real End-to-End Encrypted Messaging &amp; File Sharing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    if (typeof tailwind !== "undefined") { tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            surface: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              800: '#1e293b',
+              850: '#172033',
+              900: '#0f172a',
+              950: '#090d16',
+            }
+          }
+        }
+      }
+    }; }
+  </script>
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 16px); }
+  </style>
+</head>
+<body class="bg-surface-950 text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col selection:bg-brand-500 selection:text-white">
+
+  <!-- Top App Bar -->
+  <header class="h-14 border-b border-slate-800 bg-surface-900/90 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
+    <div class="flex items-center space-x-3">
+      <!-- Mobile Back Button (hidden on desktop) -->
+      <button id="mobileBackBtn" class="hidden md:hidden p-1.5 -ml-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 focus:outline-none" title="Back to conversations">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+
+      <!-- App Logo & Title -->
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-brand-500/20 text-white font-bold text-sm tracking-wider">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <div>
+          <span id="appBrandingTitle" class="font-semibold text-sm tracking-tight text-white block leading-tight">Private Messenger</span>
+          <span class="text-[10px] text-emerald-400 font-mono flex items-center gap-1 leading-tight">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            E2EE Active (Web Crypto P-256)
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Global Actions -->
+    <div class="flex items-center space-x-2">
+      <!-- Peer Connection Status Pill -->
+      <div id="connectionStatusBadge" class="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800/80 border border-slate-700/60 text-slate-300">
+        <span id="statusIndicatorDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span id="statusIndicatorText">Idle</span>
+        <span id="latencyBadge" class="text-[10px] font-mono text-slate-400 ml-1 hidden">-- ms</span>
+      </div>
+
+      <!-- Quick Room Invite Button -->
+      <button id="headerInviteBtn" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>New Room</span>
+      </button>
+
+      <!-- Settings Button -->
+      <button id="settingsModalBtn" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition" title="Privacy & Security Settings">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Security Alert Banner (for key changes / warnings) -->
+  <div id="securityAlertBanner" class="hidden bg-rose-950/90 border-b border-rose-800 text-rose-200 px-4 py-2 text-xs flex items-center justify-between shrink-0">
+    <div class="flex items-center space-x-2">
+      <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      <span id="securityAlertText" class="font-medium"></span>
+    </div>
+    <button id="dismissSecurityAlertBtn" class="text-rose-400 hover:text-white ml-2 text-sm">&times;</button>
+  </div>
+
+  <!-- Main Dual-Pane Application Container -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT SIDEBAR: Conversations & Local Identity -->
+    <aside id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-r border-slate-800 bg-surface-900 flex flex-col shrink-0 z-10">
+      
+      <!-- User Local Fingerprint Bar -->
+      <div class="p-3 border-b border-slate-800 bg-surface-950/60 flex items-center justify-between text-xs">
+        <div class="flex items-center space-x-2 truncate">
+          <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-mono text-xs">
+            <span id="userAvatarChar">A</span>
+          </div>
+          <div class="truncate">
+            <div class="font-medium text-slate-200 truncate flex items-center gap-1">
+              <span id="userNicknameDisplay">You (Anonymous)</span>
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono truncate" id="userFingerprintDisplay">
+              FP: Loading...
+            </div>
+          </div>
+        </div>
+        <button id="copyMyFingerprintBtn" class="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800" title="Copy your identity fingerprint">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        </button>
+      </div>
+
+      <!-- Quick Room Connect & Actions -->
+      <div class="p-3 border-b border-slate-800 space-y-2">
+        <div class="flex items-center space-x-2">
+          <input id="roomInput" type="text" placeholder="Enter Room ID or invite..." class="flex-1 bg-surface-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 font-mono">
+          <button id="joinRoomBtn" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-medium transition shadow-sm">
+            Join
+          </button>
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <button id="startDemoPeerBtn" class="text-brand-400 hover:underline flex items-center gap-1 font-medium">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            In-Browser Peer Demo
+          </button>
+          <span class="text-slate-600">|</span>
+          <button id="clearSearchBtn" class="text-slate-400 hover:text-slate-200">
+            Local Conversations
+          </button>
+        </div>
+      </div>
+
+      <!-- Conversations List -->
+      <div id="conversationList" class="flex-1 overflow-y-auto divide-y divide-slate-800/60">
+        <!-- Rendered dynamically -->
+        <div class="p-6 text-center text-slate-500 text-xs">
+          <svg class="w-8 h-8 mx-auto mb-2 opacity-40 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          No active conversations yet.<br>Create or join a room above.
+        </div>
+      </div>
+
+      <!-- Sidebar Bottom Info -->
+      <div class="p-2.5 border-t border-slate-800 bg-surface-950/80 text-[10px] text-slate-500 flex items-center justify-between">
+        <span>Zero server persistence</span>
+        <button id="wipeAllDataSideBtn" class="text-rose-400 hover:underline">Clear Local DB</button>
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN PANEL: Active Chat or Welcome Screen -->
+    <main id="chatPanel" class="flex-1 flex flex-col bg-surface-950 overflow-hidden relative">
+
+      <!-- Chat Top Header -->
+      <div id="chatHeader" class="h-14 border-b border-slate-800 bg-surface-900/60 backdrop-blur px-4 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3 truncate">
+          <div class="relative">
+            <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-brand-400 font-semibold text-xs">
+              <span id="activePeerInitial">P</span>
+            </div>
+            <span id="activePeerStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500 border-2 border-surface-900 absolute -bottom-0.5 -right-0.5"></span>
+          </div>
+
+          <div class="truncate">
+            <div class="flex items-center space-x-1.5 truncate">
+              <span id="activePeerName" class="font-medium text-sm text-slate-100 truncate">Select or Join a Room</span>
+              <!-- Verification Badge -->
+              <span id="verifiedBadge" class="hidden text-emerald-400" title="Contact Identity Verified">
+                <svg class="w-4 h-4 fill-emerald-500/20" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-400 truncate flex items-center gap-1.5">
+              <span id="activeRoomIdDisplay" class="font-mono text-slate-400">No active room</span>
+              <span class="text-slate-600">&bull;</span>
+              <span id="activePeerSecurityLabel" class="text-emerald-400 font-medium">AES-256-GCM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Header Actions -->
+        <div class="flex items-center space-x-1.5">
+          <!-- Safety Number / Key Fingerprint Modal Trigger -->
+          <button id="viewSafetyNumberBtn" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1" title="Verify contact cryptographic identity">
+            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <span class="hidden sm:inline">Safety Number</span>
+          </button>
+
+          <!-- Leave / Close Room -->
+          <button id="leaveRoomBtn" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition" title="Leave and close conversation">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Scroll Area -->
+      <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-3">
+        <!-- Messages rendered dynamically -->
+        <div id="emptyConversationState" class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500">
+          <div class="w-12 h-12 rounded-2xl bg-surface-900 border border-slate-800 flex items-center justify-center mb-3 text-slate-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-300 mb-1">Direct Peer-to-Peer Encrypted Room</h3>
+          <p class="text-xs max-w-sm text-slate-400 mb-4">
+            Messages and files are encrypted with ECDH P-256 and AES-256-GCM. Transfer occurs directly between peers over WebRTC Data Channels. Zero content touches the server.
+          </p>
+          <button id="emptyStateInviteBtn" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-medium transition shadow-md">
+            Invite Peer to this Room
+          </button>
+        </div>
+      </div>
+
+      <!-- Transfer Progress Dock (when transferring files) -->
+      <div id="transferProgressDock" class="hidden border-t border-slate-800 bg-surface-900/90 backdrop-blur px-4 py-2 text-xs">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center space-x-2 truncate">
+            <svg class="w-4 h-4 text-brand-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+            <span id="transferFileName" class="font-medium text-slate-200 truncate">Transferring file...</span>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <span id="transferProgressPercent" class="font-mono text-slate-400 text-[11px]">0%</span>
+            <button id="cancelTransferBtn" class="text-rose-400 hover:text-rose-300 text-[11px] font-medium">Cancel</button>
+          </div>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+          <div id="transferProgressBar" class="bg-brand-500 h-1.5 rounded-full transition-all duration-150" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Drag & Drop Overlay -->
+      <div id="dropOverlay" class="hidden absolute inset-0 bg-brand-950/80 backdrop-blur-sm border-2 border-dashed border-brand-500 flex flex-col items-center justify-center z-30 pointer-events-none">
+        <svg class="w-12 h-12 text-brand-400 mb-2 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <p class="text-sm font-semibold text-white">Drop file to encrypt &amp; send directly</p>
+        <p class="text-xs text-brand-300">Chunked AES-256-GCM WebRTC transfer</p>
+      </div>
+
+      <!-- Message Composer -->
+      <div id="composerArea" class="border-t border-slate-800 bg-surface-900/90 backdrop-blur p-3 safe-bottom shrink-0">
+        <form id="messageForm" class="flex items-end space-x-2">
+          
+          <!-- File Attachment Trigger -->
+          <button type="button" id="attachFileBtn" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition shrink-0" title="Attach file or image (up to 25 MB)">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+          </button>
+          <input type="file" id="filePickerInput" class="hidden" multiple>
+
+          <!-- Textarea Input -->
+          <div class="flex-1 bg-surface-950 border border-slate-700 rounded-xl focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 transition px-3 py-2 flex items-center">
+            <textarea id="messageInput" rows="1" placeholder="Type an encrypted message... (Shift+Enter for newline)" class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none max-h-32 leading-relaxed" style="min-height: 22px;"></textarea>
+          </div>
+
+          <!-- Send Button -->
+          <button type="submit" id="sendMessageBtn" class="p-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl shadow-md shadow-brand-500/20 transition shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" title="Send encrypted message (Enter)">
+            <svg class="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </form>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ==================== MODALS & DRAWERS ==================== -->
+
+  <!-- 1. Safety Number & Verification Modal -->
+  <div id="safetyNumberModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-surface-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></sv
