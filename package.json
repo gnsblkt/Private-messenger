@@ -1,9 +1,12 @@
 {
   "name": "private-messenger-signaling",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "private": true,
+  "description": "WebRTC signaling server for Private Messenger",
   "main": "server/signalingServer.js",
   "scripts": {
-    "start": "node server/signalingServer.js"
+    "start": "node server/signalingServer.js",
+    "check": "node --check server/signaling.js && node --check server/signalingServer.js && node --check api/ws.js"
   },
   "dependencies": {
     "ws": "^8.18.0"
