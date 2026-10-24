@@ -17,6 +17,7 @@
 <div class="field"><input id="nickname" maxlength="40" placeholder="Your nickname" value="Anonymous" aria-label="Your nickname"></div>
 <div class="field"><input id="roomInput" maxlength="80" placeholder="Room ID" aria-label="Room ID"><button id="newRoomBtn" title="Generate a private room ID">New</button></div>
 <div class="field"><button class="primary" id="joinBtn" style="flex:1">Join room</button><button id="leaveBtn" disabled>Leave</button></div>
+<details><summary class="hint" style="cursor:pointer">Connection settings</summary><div style="display:flex;flex-direction:column;gap:7px;margin-top:8px"><input id="signalingUrl" aria-label="Signaling WebSocket URL" placeholder="wss://your-signaling-service/api/ws"><button id="saveServerBtn" type="button">Save server URL</button><div class="hint">Use the Vercel endpoint by default, or enter your long-running signaling server URL.</div></div></details>
 <div class="hint intro">Share the same room ID with the other person. Messages travel through a WebRTC data channel; the signaling service exchanges connection setup information, not chat text.</div>
 <div><strong style="font-size:13px">Peers</strong><div class="hint" id="peerSummary">Not in a room yet.</div></div>
 <div class="peers" id="peerList"></div>
@@ -38,7 +39,10 @@ const state = { socket:null, roomId:null, peerId:randomId(), joined:false, peers
 function randomId(){try{return crypto.randomUUID()}catch{return Math.random().toString(36).slice(2)+Date.now().toString(36)}}
 function setStatus(text, kind=''){ $('status').textContent=text; $('status').className='status '+kind; }
 function toast(text){const el=$('toast');el.textContent=text;el.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.display='none',3500)}
-function wsUrl(){return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/ws'}
+function defaultWsUrl(){return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/ws'}
+function wsUrl(){const raw=$('signalingUrl').value.trim()||defaultWsUrl();if(raw.startsWith('/'))return (location.protocol==='https:'?'wss://':'ws://')+location.host+raw;return raw}
+try{$('signalingUrl').value=localStorage.getItem('private-messenger-signaling-url')||defaultWsUrl()}catch{$('signalingUrl').value=defaultWsUrl()}
+$('saveServerBtn').addEventListener('click',()=>{const value=$('signalingUrl').value.trim();if(!/^wss?:\\/\\//i.test(value)&&!value.startsWith('/')){toast('Enter a ws:// or wss:// URL.');return}try{localStorage.setItem('private-messenger-signaling-url',value)}catch{}toast('Signaling URL saved on this device.')});
 function sendSignal(payload){if(state.socket && state.socket.readyState===WebSocket.OPEN)state.socket.send(JSON.stringify(payload));else setStatus('Signaling socket is not connected. Check /api/ws deployment.','bad')}
 function sendToPeer(peerId,payload){sendSignal({...payload,to:peerId})}
 function addMessage(name,text,mine=false,extra){const box=$('messages');const empty=box.querySelector('.empty');if(empty)empty.remove();const item=document.createElement('div');item.className='message'+(mine?' mine':'');const by=document.createElement('div');by.className='by';by.textContent=(mine?'You':name)+' · '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});item.appendChild(by);if(extra)item.appendChild(extra);else item.appendChild(document.createTextNode(text));box.appendChild(item);box.scrollTop=box.scrollHeight}
